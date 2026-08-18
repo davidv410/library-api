@@ -1,3 +1,4 @@
+using LibraryApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryApi.Data;
@@ -8,4 +9,6 @@ public class AppDbContext : DbContext
         : base(options)
     {
     }
+
+    public DbSet<Book> Books => Set<Book>();
 }
