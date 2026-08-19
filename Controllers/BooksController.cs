@@ -39,7 +39,7 @@ public class BooksController : ControllerBase
 
         await _db.SaveChangesAsync();
 
-        return Ok(book);
+        return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
     }
 
     [HttpGet("{id}")]
@@ -89,7 +89,7 @@ public class BooksController : ControllerBase
     public async Task<IActionResult> DeleteBook(int id)
     {
         var book = await _db.Books.FindAsync(id);
-        
+
         if(book == null)
         {
             return NotFound();
