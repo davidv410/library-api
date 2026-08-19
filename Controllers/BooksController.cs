@@ -41,4 +41,17 @@ public class BooksController : ControllerBase
 
         return Ok(book);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetBook(int id)
+    {
+        var book = await _db.Books.FindAsync(id);
+
+        if(book == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(book);
+    }
 }
