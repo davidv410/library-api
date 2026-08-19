@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryApi.DTOs.Books;
 using LibraryApi.Models;
+using LibraryApi.Mappers;
 
 namespace LibraryApi.Controllers;
 
@@ -22,15 +23,9 @@ public class BooksController : ControllerBase
     {
         var books = await _db.Books.ToListAsync();
 
-        var response = books.Select(book => new BookResponseDto
-        {
-            Id = book.Id,
-            Title = book.Title,
-            Author = book.Author,
-            ReleaseYear = book.ReleaseYear
-        });
+        var response = books.Select(BookMapper.ToResponseDto);
 
-        return Ok(books);
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
@@ -43,13 +38,9 @@ public class BooksController : ControllerBase
             return NotFound();
         }
 
-        return Ok(new BookResponseDto
-        {
-            Id = book.Id,
-            Title = book.Title,
-            Author = book.Author,
-            ReleaseYear = book.ReleaseYear
-        });
+        var response = BookMapper.ToResponseDto(book);
+
+        return Ok(response);
     }
     
     [HttpPost]
