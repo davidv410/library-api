@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using LibraryApi.DTOs.Books;
 using LibraryApi.Models;
 using LibraryApi.Mappers;
+using LibraryApi.Services;
 
 namespace LibraryApi.Controllers;
 
@@ -11,51 +12,38 @@ namespace LibraryApi.Controllers;
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
-    private readonly AppDbContext _db;
+    private readonly BookService _bookService;
 
-    public BooksController(AppDbContext db)
+    public BooksController(BookService bookService)
     {
-        _db = db;
+        _bookService = bookService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetBooks()
     {
-        var books = await _db.Books.ToListAsync();
+        var books = await _bookService.GetBooks();
 
-        var response = books.Select(BookMapper.ToResponseDto);
-
-        return Ok(response);
+        return Ok(books);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBook(int id)
     {
-        var book = await _db.Books.FindAsync(id);
+        var book = await _bookService.GetBook(id);
 
         if(book == null)
         {
             return NotFound();
         }
 
-        var response = BookMapper.ToResponseDto(book);
-
-        return Ok(response);
+        return Ok(book);
     }
     
     [HttpPost]
     public async Task<IActionResult> CreateBook(CreateBookDto dto)
     {
-        var book = new Book
-        {
-            Title = dto.Title,
-            Author = dto.Author,
-            ReleaseYear = dto.ReleaseYear
-        };
-
-        _db.Books.Add(book);
-
-        await _db.SaveChangesAsync();
+        var book = await _bookService.CreateBook(dto);
 
         return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
     }
@@ -63,29 +51,12 @@ public class BooksController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto)
     {
-        var book = await _db.Books.FindAsync(id);
+        var book = await _bookService.UpdateBook(id, dto);
 
         if(book == null)
         {
             return NotFound();
         }
-
-        if(dto.Title != null)
-        {
-            book.Title = dto.Title;
-        }
-
-        if(dto.Author != null)
-        {
-            book.Author = dto.Author;
-        }
-
-        if(dto.ReleaseYear.HasValue)
-        {
-            book.ReleaseYear = dto.ReleaseYear.Value;
-        }
-
-        await _db.SaveChangesAsync();
 
         return Ok(book);
     }
@@ -93,16 +64,12 @@ public class BooksController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBook(int id)
     {
-        var book = await _db.Books.FindAsync(id);
+        var deleted = await _bookService.DeleteBook(id);
 
-        if(book == null)
+        if(!deleted)
         {
             return NotFound();
         }
-
-        _db.Books.Remove(book);
-
-        await _db.SaveChangesAsync();
 
         return NoContent();
     }

@@ -1,4 +1,5 @@
 using LibraryApi.Data;
+using LibraryApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DatabaseURL")
     )
 );
+
+builder.Services.AddScoped<BookService>();
 
 var app = builder.Build();
 
