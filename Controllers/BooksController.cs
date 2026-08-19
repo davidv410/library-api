@@ -54,4 +54,34 @@ public class BooksController : ControllerBase
 
         return Ok(book);
     }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto)
+    {
+        var book = await _db.Books.FindAsync(id);
+
+        if(book == null)
+        {
+            return NotFound();
+        }
+
+        if(dto.Title != null)
+        {
+            book.Title = dto.Title;
+        }
+
+        if(dto.Author != null)
+        {
+            book.Author = dto.Author;
+        }
+
+        if(dto.ReleaseYear.HasValue)
+        {
+            book.ReleaseYear = dto.ReleaseYear.Value;
+        }
+
+        await _db.SaveChangesAsync();
+        
+        return Ok(book);
+    }
 }
