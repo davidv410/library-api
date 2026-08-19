@@ -22,9 +22,36 @@ public class BooksController : ControllerBase
     {
         var books = await _db.Books.ToListAsync();
 
+        var response = books.Select(book => new BookResponseDto
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ReleaseYear = book.ReleaseYear
+        });
+
         return Ok(books);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetBook(int id)
+    {
+        var book = await _db.Books.FindAsync(id);
+
+        if(book == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new BookResponseDto
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ReleaseYear = book.ReleaseYear
+        });
+    }
+    
     [HttpPost]
     public async Task<IActionResult> CreateBook(CreateBookDto dto)
     {
@@ -40,19 +67,6 @@ public class BooksController : ControllerBase
         await _db.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetBook(int id)
-    {
-        var book = await _db.Books.FindAsync(id);
-
-        if(book == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(book);
     }
 
     [HttpPatch("{id}")]
