@@ -4,10 +4,10 @@ namespace LibraryApi.DTOs.Books;
 
 public class UpdateBookDto
 {
-    [MinLength(1)]
+    [StringLength(200, MinimumLength = 1)]
     public string? Title { get; set; }
 
-    [MinLength(1)]
+    [StringLength(100, MinimumLength = 1)]
     public string? Author { get; set; }
 
     [Range(0, 2026)]
