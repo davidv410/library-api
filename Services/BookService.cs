@@ -7,7 +7,7 @@ using Microsoft.VisualBasic;
 
 namespace LibraryApi.Services;
 
-public class BookService
+public class BookService : IBookService
 {
     private readonly AppDbContext _db;
 
