@@ -2,6 +2,7 @@ using LibraryApi.Data;
 using LibraryApi.DTOs.Books;
 using LibraryApi.Mappers;
 using LibraryApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 
@@ -10,14 +11,18 @@ namespace LibraryApi.Services;
 public class BookService : IBookService
 {
     private readonly AppDbContext _db;
+    private readonly ILogger<BookService> _logger;
 
-    public BookService(AppDbContext db)
+    public BookService(AppDbContext db, ILogger<BookService> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<BookResponseDto>> GetBooks()
     {
+        _logger.LogInformation("Getting all books");
+
         var books = await _db.Books.ToListAsync();
 
         return books.Select(BookMapper.ToResponseDto);
@@ -29,6 +34,8 @@ public class BookService : IBookService
 
         if(book == null)
         {
+            _logger.LogInformation("Book with ID {BookId} was not found", id);
+
             return null;
         }
 
