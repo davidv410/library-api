@@ -35,7 +35,7 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-builder.Services.AddIdentityCore<ApplicationUser>().AddSignInManager().AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddIdentityCore<ApplicationUser>().AddRoles<IdentityRole>().AddSignInManager().AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
@@ -48,6 +48,14 @@ builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+    await authService.CreateRoles();
+    await authService.AssignAdminRole("David");
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
