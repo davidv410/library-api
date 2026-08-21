@@ -15,12 +15,47 @@ public class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public AuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+    public AuthService(
+        UserManager<ApplicationUser> userManager, 
+        SignInManager<ApplicationUser> signInManager, 
+        IConfiguration configuration,
+        RoleManager<IdentityRole> roleManager
+        )
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _roleManager = roleManager;
+    }
+
+    public async Task CreateRoles()
+    {
+        string[] roles = { "Admin", "User" };
+
+        foreach(var role in roles)
+        {
+            if(!await _roleManager.RoleExistsAsync(role))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
+    }
+
+    public async Task AssignAdminRole(string username)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+
+        if(user == null)
+        {
+            return;
+        }
+
+        if(!await _userManager.IsInRoleAsync(user, "Admin"))
+        {
+            await _userManager.AddToRoleAsync(user, "Admin");
+        }
     }
 
     public async Task<IdentityResult> RegisterUser(RegisterUserDto dto)
@@ -54,11 +89,15 @@ public class AuthService : IAuthService
             return null;
         }
 
+        var roles = await _userManager.GetRolesAsync(user);
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Name, user.UserName!)
         };
+
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
         var key = _configuration["Jwt:Key"]!;
 
