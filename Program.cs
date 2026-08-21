@@ -22,9 +22,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IBookService, BookService>();
 
-var app = builder.Build();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
-app.UseExceptionHandler();
+var app = builder.Build();
 
 app.UseExceptionHandler();
 
