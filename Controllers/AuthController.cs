@@ -1,6 +1,7 @@
 using LibraryApi.DTOs.Auth;
 using LibraryApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 
 namespace LibraryApi.Controllers;
 
@@ -26,5 +27,21 @@ public class AuthController : ControllerBase
         }
 
         return Ok();
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginUserDto dto)
+    {
+        var token = await _authService.LoginUser(dto);
+
+        if(token == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new
+        {
+            token
+        });
     }
 }
