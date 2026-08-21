@@ -68,6 +68,7 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBook(int id)
     {
