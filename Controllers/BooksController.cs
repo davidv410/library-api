@@ -5,6 +5,8 @@ using LibraryApi.DTOs.Books;
 using LibraryApi.Models;
 using LibraryApi.Mappers;
 using LibraryApi.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace LibraryApi.Controllers;
 
@@ -40,10 +42,15 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
     
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateBook(CreateBookDto dto)
     {
         var book = await _bookService.CreateBook(dto);
+        
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        Console.WriteLine(userId);
 
         return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
     }
