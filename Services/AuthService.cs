@@ -7,6 +7,7 @@ using LibraryApi.DTOs.Auth;
 using LibraryApi.Models;
 using LibraryApi.Services;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
 
 namespace LibraryApi.Services;
 
@@ -17,17 +18,21 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly RoleManager<IdentityRole> _roleManager;
 
+    private readonly AppDbContext _db;
+
     public AuthService(
         UserManager<ApplicationUser> userManager, 
         SignInManager<ApplicationUser> signInManager, 
         IConfiguration configuration,
-        RoleManager<IdentityRole> roleManager
+        RoleManager<IdentityRole> roleManager,
+        AppDbContext db
         )
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
         _roleManager = roleManager;
+        _db = db;
     }
 
     public async Task CreateRoles()
@@ -116,6 +121,27 @@ public class AuthService : IAuthService
             signingCredentials: credentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+        var refreshToken = Convert.ToBase64String(
+            RandomNumberGenerator.GetBytes(64)
+        );
+
+        var tokenHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken))
+        );
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            TokenHash = tokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            UserId = user.Id
+        };
+
+        _db.RefreshTokens.Add(refreshTokenEntity);
+
+        await _db.SaveChangesAsync();
+
+        return accessToken;
     }
 }
