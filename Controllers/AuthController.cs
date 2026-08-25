@@ -56,4 +56,19 @@ public class AuthController : ControllerBase
             accesToken = result.Value.AccessToken
         });
     }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if(refreshToken == null)
+        {
+            return Ok();
+        }
+
+        await _authService.LogoutUser(refreshToken);
+        Response.Cookies.Delete("refreshToken");
+        return Ok();
+    }
 }
