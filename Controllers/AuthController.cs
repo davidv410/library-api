@@ -32,16 +32,28 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginUserDto dto)
     {
-        var token = await _authService.LoginUser(dto);
+        var result = await _authService.LoginUser(dto);
 
-        if(token == null)
+        if(result == null)
         {
             return Unauthorized();
         }
 
+        Response.Cookies.Append(
+            "refreshToken",
+            result.Value.RefreshToken,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            }
+        );
+
         return Ok(new
         {
-            token
+            accesToken = result.Value.AccessToken
         });
     }
 }
