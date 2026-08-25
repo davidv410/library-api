@@ -17,7 +17,6 @@ public class AuthService : IAuthService
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
     private readonly RoleManager<IdentityRole> _roleManager;
-
     private readonly AppDbContext _db;
 
     public AuthService(
@@ -74,7 +73,7 @@ public class AuthService : IAuthService
         return await _userManager.CreateAsync(user, dto.Password);
     }
 
-    public async Task<string?> LoginUser(LoginUserDto dto)
+    public async Task<(string AccessToken, string RefreshToken)?> LoginUser(LoginUserDto dto)
     {
         var user = await _userManager.FindByNameAsync(dto.Username);
 
@@ -142,6 +141,6 @@ public class AuthService : IAuthService
 
         await _db.SaveChangesAsync();
 
-        return accessToken;
+        return (accessToken, refreshToken);
     }
 }
