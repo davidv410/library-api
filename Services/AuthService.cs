@@ -8,6 +8,7 @@ using LibraryApi.Models;
 using LibraryApi.Services;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryApi.Services;
 
@@ -142,5 +143,23 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         return (accessToken, refreshToken);
+    }
+
+    public async Task LogoutUser(string refreshToken)
+    {
+        var tokenHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken))
+        );
+
+        var tokenEntity = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
+
+        if(tokenEntity == null)
+        {
+            return;
+        }
+
+        tokenEntity.RevokedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
     }
 }
