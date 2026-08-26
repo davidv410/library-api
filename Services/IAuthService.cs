@@ -10,4 +10,5 @@ public interface IAuthService
     Task CreateRoles();
     Task AssignAdminRole(string username);
     Task LogoutUser(string refreshToken);
+    Task <(string AccessToken, string RefreshToken)?> RefreshToken(string refreshToken);
 }
