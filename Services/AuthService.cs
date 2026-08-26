@@ -9,6 +9,7 @@ using LibraryApi.Services;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 
 namespace LibraryApi.Services;
 
@@ -161,5 +162,59 @@ public class AuthService : IAuthService
         tokenEntity.RevokedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+    }
+
+    public async Task <(string AccessToken, string RefreshToken)?> RefreshToken(string refreshToken)
+    {
+        var tokenHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken))
+        );
+    
+        var oldToken = await _db.RefreshTokens.Include(rt => rt.User).FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
+
+        if(oldToken == null || oldToken.RevokedAt != null || oldToken.ExpiresAt < DateTime.UtcNow)
+        {
+            return null;
+        }
+
+        oldToken.RevokedAt = DateTime.UtcNow;
+
+        var user = oldToken.User;
+        var roles = await _userManager.GetRolesAsync(user);
+        
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.UserName!)
+        };
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+        var key = _configuration["Jwt:Key"]!;
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
+        );
+
+        var newAccessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+        var newRefreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+        var newRefreshTokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(newRefreshToken)));
+
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+           TokenHash = newRefreshTokenHash,
+           ExpiresAt = DateTime.UtcNow.AddDays(7),
+           UserId = user.Id 
+        });
+
+        await _db.SaveChangesAsync();
+
+        return (newAccessToken, newRefreshToken);
     }
 }
