@@ -170,16 +170,30 @@ public class AuthService : IAuthService
             SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken))
         );
     
-        var oldToken = await _db.RefreshTokens.Include(rt => rt.User).FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
+        var currentToken = await _db.RefreshTokens.Include(rt => rt.User).FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
 
-        if(oldToken == null || oldToken.RevokedAt != null || oldToken.ExpiresAt < DateTime.UtcNow)
+        if(currentToken == null || currentToken.ExpiresAt < DateTime.UtcNow)
         {
             return null;
         }
 
-        oldToken.RevokedAt = DateTime.UtcNow;
+        if(currentToken.RevokedAt != null)
+        {
+            var userTokens = _db.RefreshTokens.Where(rt => rt.UserId == currentToken.UserId && rt.RevokedAt == null);
 
-        var user = oldToken.User;
+            foreach(var t in userTokens)
+            {
+                t.RevokedAt = DateTime.UtcNow;
+            }
+
+            await _db.SaveChangesAsync();
+            return null;
+        }
+
+
+        currentToken.RevokedAt = DateTime.UtcNow;
+
+        var user = currentToken.User;
         var roles = await _userManager.GetRolesAsync(user);
         
         var claims = new List<Claim>
