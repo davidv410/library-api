@@ -42,7 +42,7 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
     
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateBook(CreateBookDto dto)
     {
@@ -50,11 +50,10 @@ public class BooksController : ControllerBase
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        Console.WriteLine(userId);
-
         return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto)
     {
