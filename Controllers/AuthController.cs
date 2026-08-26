@@ -71,4 +71,37 @@ public class AuthController : ControllerBase
         Response.Cookies.Delete("refreshToken");
         return Ok();
     }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if(refreshToken == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.RefreshToken(refreshToken); 
+
+        if(result == null)
+        {
+            Response.Cookies.Delete("refreshToken");
+            return Unauthorized();
+        }
+
+        Response.Cookies.Append(
+            "refreshToken",
+            result.Value.RefreshToken,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            }
+        );
+
+        return Ok(new { accessToken = result.Value.AccessToken });
+    }
 }
