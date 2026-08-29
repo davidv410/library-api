@@ -47,6 +47,8 @@ builder.Services.AddScoped<IBookService, BookService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+builder.Services.AddScoped<IBookReviewService, BookReviewService>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
