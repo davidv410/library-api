@@ -13,6 +13,21 @@ public class GlobalExceptionHandler : IExceptionHandler
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
+        if(exception is AppException appException)
+        {
+          httpContext.Response.StatusCode = appException.StatusCode;
+
+          await httpContext.Response.WriteAsJsonAsync(
+            new
+            {
+               message = appException.Message 
+            },
+            cancellationToken
+          );  
+
+          return true;
+        }
+
         _logger.LogError(exception, "An unhandled exception occurred.");
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
