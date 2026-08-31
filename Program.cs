@@ -2,6 +2,8 @@ using LibraryApi.Data;
 using LibraryApi.Exceptions;
 using LibraryApi.Services;
 using LibraryApi.Models;
+using LibraryApi.Hubs;
+using Microsoft.AspNetCore.SignalR; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -27,9 +29,27 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
 
        ValidateLifetime = true
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if(!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddControllers();
+
+builder.Services.AddSignalR();
 
 builder.Services.AddProblemDetails();
 
@@ -49,6 +69,20 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IBookReviewService, BookReviewService>();
 
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRCors", policy =>
+    {
+        policy
+        .WithOrigins("http://127.0.0.1:5500")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -59,11 +93,14 @@ using (var scope = app.Services.CreateScope())
     await authService.AssignAdminRole("David");
 }
 
+app.UseCors("SignalRCors");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseExceptionHandler();
 
 app.MapControllers();
+app.MapHub<MessagingHub>("/hubs/messaging");
 
 app.Run();
