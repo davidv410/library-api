@@ -18,6 +18,19 @@ public class BookReviewController : ControllerBase
         _bookReviewService = bookReviewService;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetBookReviews(int bookId)
+    {
+        var bookReviews = await _bookReviewService.GetBookReviews(bookId);
+
+        if(bookReviews == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(bookReviews);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> CreateBookReview(int bookId, CreateBookReviewDto dto)
