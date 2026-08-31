@@ -4,6 +4,7 @@ using LibraryApi.Mappers;
 using LibraryApi.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using LibraryApi.Exceptions;
 
 namespace LibraryApi.Services;
 
@@ -21,7 +22,7 @@ public class BookReviewService : IBookReviewService
         var bookExists = await _db.Books.FindAsync(bookId);
         if(bookExists == null)
         {
-            return null;
+            throw new AppException(StatusCodes.Status404NotFound, "Book was not found");
         }
 
         var bookReviews = await _db.BookReviews.Where(book => book.BookId == bookId).ToListAsync();
@@ -33,13 +34,13 @@ public class BookReviewService : IBookReviewService
     {
         if(string.IsNullOrWhiteSpace(userId))
         {
-            return null;
+            throw new AppException(StatusCodes.Status401Unauthorized, "User not logged in");
         }
 
         var bookExists = await _db.Books.FindAsync(bookId);
         if(bookExists == null)
         {
-            return null;
+            throw new AppException(StatusCodes.Status404NotFound, "Book was not found");
         }
 
         var bookReview = new BookReview

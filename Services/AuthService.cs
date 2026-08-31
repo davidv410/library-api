@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.BearerToken;
+using LibraryApi.Exceptions;
 
 namespace LibraryApi.Services;
 
@@ -20,13 +21,15 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly AppDbContext _db;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         UserManager<ApplicationUser> userManager, 
         SignInManager<ApplicationUser> signInManager, 
         IConfiguration configuration,
         RoleManager<IdentityRole> roleManager,
-        AppDbContext db
+        AppDbContext db,
+        ILogger<AuthService> logger
         )
     {
         _userManager = userManager;
@@ -34,6 +37,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _roleManager = roleManager;
         _db = db;
+        _logger = logger;
     }
 
     public async Task CreateRoles()
@@ -81,7 +85,7 @@ public class AuthService : IAuthService
 
         if(user == null)
         {
-            return null;
+            throw new AppException(StatusCodes.Status404NotFound, "Wrong credentials");
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(
@@ -92,7 +96,7 @@ public class AuthService : IAuthService
 
         if(!result.Succeeded)
         {
-            return null;
+            throw new AppException(StatusCodes.Status404NotFound, "Wrong credentials");
         }
 
         var roles = await _userManager.GetRolesAsync(user);
@@ -156,6 +160,7 @@ public class AuthService : IAuthService
 
         if(tokenEntity == null)
         {
+            _logger.LogInformation("Logout attempted with an invalid or non-existent refresh token.");
             return;
         }
 
@@ -174,7 +179,7 @@ public class AuthService : IAuthService
 
         if(currentToken == null || currentToken.ExpiresAt < DateTime.UtcNow)
         {
-            return null;
+            throw new AppException(StatusCodes.Status401Unauthorized, "Invalid token");
         }
 
         if(currentToken.RevokedAt != null)
