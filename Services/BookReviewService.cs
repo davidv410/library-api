@@ -1,5 +1,6 @@
 using LibraryApi.Data;
 using LibraryApi.DTOs.BookReviews;
+using LibraryApi.Mappers;
 using LibraryApi.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -23,18 +24,9 @@ public class BookReviewService : IBookReviewService
             return null;
         }
 
-        var bookReviews = await _db.BookReviews.Where(book => book.BookId == bookId).Select(book => new BookReviewResponseDto
-        {
-            Id = book.Id,
-            Review = book.Review,
-            Rating = book.Rating,
-            LikeCount = book.LikeCount,
-            DislikeCount = book.DislikeCount,
-            BookId = book.BookId,
-            UserId = book.UserId
-        }).ToListAsync();
+        var bookReviews = await _db.BookReviews.Where(book => book.BookId == bookId).ToListAsync();
 
-        return bookReviews;
+        return bookReviews.Select(BookReviewMapper.ToResponseDto);
     }
 
     public async Task<BookReviewResponseDto?> CreateBookReview(int bookId, string userId, CreateBookReviewDto dto)
@@ -62,15 +54,6 @@ public class BookReviewService : IBookReviewService
 
         await _db.SaveChangesAsync();
 
-        return new BookReviewResponseDto
-        {
-            Id = bookReview.Id,
-            Review = bookReview.Review,
-            Rating = bookReview.Rating,
-            LikeCount = bookReview.LikeCount,
-            DislikeCount = bookReview.DislikeCount,
-            BookId = bookReview.BookId,
-            UserId = bookReview.UserId
-        };
+        return BookReviewMapper.ToResponseDto(bookReview);
     }
 }
