@@ -5,6 +5,7 @@ using LibraryApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using LibraryApi.Exceptions;
 
 namespace LibraryApi.Services;
 
@@ -36,7 +37,7 @@ public class BookService : IBookService
         {
             _logger.LogInformation("Book with ID {BookId} was not found", id);
 
-            return null;
+            throw new AppException(StatusCodes.Status404NotFound, "Book was not found");
         }
 
         return BookMapper.ToResponseDto(book);
@@ -65,7 +66,7 @@ public class BookService : IBookService
 
         if(book == null)
         {
-            return null;
+            throw new AppException(StatusCodes.Status404NotFound, "Book doesnt exist");
         }
 
         if(dto.Title != null)
@@ -94,7 +95,7 @@ public class BookService : IBookService
 
         if(book == null)
         {
-            return false;
+            throw new AppException(StatusCodes.Status404NotFound, "Book doesnt exist");
         }
 
         _db.Books.Remove(book);
