@@ -16,6 +16,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Book> Books => Set<Book>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<BookReview> BookReviews => Set<BookReview>();
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -42,5 +43,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<BookReview>()
             .HasIndex(br => new { br.BookId, br.UserId })
             .IsUnique();
+
+        builder.Entity<Message>()
+            .HasOne(m => m.Sender)
+            .WithMany()
+            .HasForeignKey(m => m.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Message>()
+            .HasOne(m => m.Receiver)
+            .WithMany()
+            .HasForeignKey(m => m.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
