@@ -16,9 +16,12 @@ public class BooksController : ControllerBase
 {
     private readonly IBookService _bookService;
 
-    public BooksController(IBookService bookService)
+    private readonly IBookNotificationService _bookNotificationService;
+
+    public BooksController(IBookService bookService, IBookNotificationService bookNotificationService)
     {
         _bookService = bookService;
+        _bookNotificationService = bookNotificationService;
     }
 
     [HttpGet]
@@ -47,9 +50,10 @@ public class BooksController : ControllerBase
     public async Task<IActionResult> CreateBook(CreateBookDto dto)
     {
         var book = await _bookService.CreateBook(dto);
+
+        await _bookNotificationService.AnnounceNewBook(book);
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
         return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
     }
 
