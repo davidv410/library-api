@@ -6,7 +6,7 @@ public class CreateBookReviewDto
 {
     [Required]
     [StringLength(500, MinimumLength = 1)]
-    public string Review { get; set; } = String.Empty;
+    public string Review { get; set; } = string.Empty;
 
     [Required]
     [Range(1, 5)]
