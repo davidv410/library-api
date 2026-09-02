@@ -11,10 +11,12 @@ namespace LibraryApi.Controllers;
 public class MessageController : ControllerBase
 {
     private readonly IMessageService _messageService;
+    private readonly IMessageNotificationService _messageNotificationService;
 
-    public MessageController(IMessageService messageService)
+    public MessageController(IMessageService messageService, IMessageNotificationService messageNotificationService)
     {
         _messageService = messageService;
+        _messageNotificationService = messageNotificationService;
     }
 
     [HttpPost]
@@ -22,12 +24,14 @@ public class MessageController : ControllerBase
     public async Task<IActionResult> SendMessage(CreateMessageDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var saveMessage = await _messageService.SendMessage(userId, dto);
-        if(saveMessage == null)
+        var message = await _messageService.SendMessage(userId, dto);
+        if(message == null)
         {
             return BadRequest("Invalid message");
         }
-        return Ok(saveMessage);
+
+        await _messageNotificationService.NewMessage(message);
+        return Ok(message);
     }
 
     [HttpGet("{receiverId}")]
