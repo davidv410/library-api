@@ -73,6 +73,8 @@ builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 
 builder.Services.AddScoped<IBookNotificationService, BookNotificationService>();
 
+builder.Services.AddScoped<IMessageService, MessageService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCors", policy =>
