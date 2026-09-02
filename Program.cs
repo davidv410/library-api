@@ -75,6 +75,8 @@ builder.Services.AddScoped<IBookNotificationService, BookNotificationService>();
 
 builder.Services.AddScoped<IMessageService, MessageService>();
 
+builder.Services.AddScoped<IMessageNotificationService, MessageNotificationService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCors", policy =>
