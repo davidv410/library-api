@@ -63,9 +63,21 @@ public class MessageService : IMessageService
         {
             return null;
         }
-        throw new NotImplementedException();
-        //check db for messages between users
 
-        //return new MessageResponseDto
+        var messages = await _db.Messages
+        .Where(u => 
+        (u.SenderId == userId && u.ReceiverId == receiverId) || 
+        (u.SenderId == receiverId && u.ReceiverId == userId))
+        .OrderBy(m => m.SentAt)
+        .ToListAsync();
+
+        return messages.Select(m => new MessageResponseDto
+        {
+            Id = m.Id,
+            SenderId = m.SenderId,
+            ReceiverId = m.ReceiverId,
+            MessageContent = m.MessageContent,
+            SentAt = m.SentAt
+        });
     }
 }
