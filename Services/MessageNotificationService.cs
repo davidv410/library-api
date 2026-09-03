@@ -14,6 +14,6 @@ public class MessageNotificationService : IMessageNotificationService
 
     public async Task NewMessage (MessageResponseDto message)
     {
-        await _hubContext.Clients.User(message.ReceiverId).SendAsync("PrivateMessage", message);
+        await _hubContext.Clients.Users(message.SenderId, message.ReceiverId).SendAsync("PrivateMessage", message);
     }
 }
