@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<BookReview> BookReviews => Set<BookReview>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<RentedBook> RentedBooks => Set<RentedBook>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
