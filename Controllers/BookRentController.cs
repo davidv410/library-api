@@ -20,7 +20,7 @@ public class BookRentController : ControllerBase
     public async Task<IActionResult> RentBook (int bookId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var rent = _bookRentService.RentBook(bookId, userId);
+        var rent = await _bookRentService.RentBook(bookId, userId);
         return Ok(rent);
     }
 }
