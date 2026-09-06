@@ -1,6 +1,8 @@
+using LibraryApi.DTOs.BookRent;
+
 namespace LibraryApi.Services;
 
 public interface IBookRentService
 {
-    Task RentBook(int bookId, string userId);
+    Task<BookRentResponseDto> RentBook(int bookId, string userId);
 }
